@@ -36,11 +36,18 @@ def process_egg(egg):
         metadata = Metadata(path=pkginfo)
         pprint.pprint(metadata.todict())
 
+    return metadata
+
+def copy_toplevels(egg, egg_dir):
+
     with open(os.path.join(egg, 'top_level.txt')) as t:
         top_levels = list(iter_toplevel(egg))
-        print(top_levels)
+        for top_level in top_levels:
+            src = os.path.join(os.path.dirname(egg), top_level)
+            dest = os.path.join(egg_dir, top_level)
+            print('copy %s to %s' % (src, dest))
+            shutil.copytree(src, dest)
 
-    return metadata
 
 def main():
     parser = argparse.ArgumentParser()
@@ -54,14 +61,8 @@ def main():
         for egg in find_eggifo(condadir):
             metadata = process_egg(egg)
             egg_name = os.path.basename(egg)
-            print(egg_name)
             egg_dir = os.path.join(tmp, egg_name)
-            # os.mkdir(egg_dir)
-            print('copy %s to %s' % (os.path.dirname(egg), egg_dir))
-            shutil.copytree(os.path.dirname(egg), egg_dir)
-            print(egg_dir)
-            print(os.path.basename(egg_dir))
+            copy_toplevels(egg, egg_dir)
             metadata.write(os.path.join(egg_dir, "EGG-INFO"), legacy=True)
             egg_info = egg_info_re.match(os.path.basename(egg_dir)).groupdict()
-            print(egg_info)
             egg2wheel(egg_dir, os.path.join(os.getcwd(), 'wheelhouse'))
