@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 here = os.path.dirname(__file__)
 
-__version__ = '0.0'
+__version__ = '0.1'
 
 __author__ = 'Atsushi Odagiri'
 __author_email__ = 'aodagx@gmail.com'
