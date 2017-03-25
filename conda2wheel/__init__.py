@@ -5,8 +5,11 @@ import shutil
 import sys
 import tarfile
 import tempfile
+import logging
 from wheel.egg2wheel import egg2wheel, egg_info_re
 from distlib.metadata import Metadata
+
+logger = logging.getLogger(__name__)
 
 
 def extract(condafile, workdir):
@@ -29,12 +32,12 @@ def iter_toplevel(egg):
                 yield line
 
 def process_egg(egg):
-    print(egg)
+    logger.debug(egg)
     pkginfo = os.path.join(egg, 'PKG-INFO')
     toplevel = os.path.join(egg, 'top_level.txt')
     if os.path.exists(pkginfo):
         metadata = Metadata(path=pkginfo)
-        pprint.pprint(metadata.todict())
+        logger.debug(metadata.todict())
 
     return metadata
 
@@ -45,15 +48,19 @@ def copy_toplevels(egg, egg_dir):
         for top_level in top_levels:
             src = os.path.join(os.path.dirname(egg), top_level)
             dest = os.path.join(egg_dir, top_level)
-            print('copy %s to %s' % (src, dest))
+            logger.debug('copy %s to %s' % (src, dest))
             shutil.copytree(src, dest)
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--wheel-dir', '-w', default=os.getcwd())
+    parser.add_argument('--debug', action="store_true")
     parser.add_argument('condafile')
     args = parser.parse_args()
+
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
 
     with tempfile.TemporaryDirectory() as tmp:
         condadir = os.path.join(tmp, 'conda')
