@@ -51,6 +51,7 @@ def copy_toplevels(egg, egg_dir):
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--wheel-dir', '-w', default=os.getcwd())
     parser.add_argument('condafile')
     args = parser.parse_args()
 
@@ -65,4 +66,4 @@ def main():
             copy_toplevels(egg, egg_dir)
             metadata.write(os.path.join(egg_dir, "EGG-INFO"), legacy=True)
             egg_info = egg_info_re.match(os.path.basename(egg_dir)).groupdict()
-            egg2wheel(egg_dir, os.path.join(os.getcwd(), 'wheelhouse'))
+            egg2wheel(egg_dir, os.path.join(os.getcwd(), args.wheel_dir))
