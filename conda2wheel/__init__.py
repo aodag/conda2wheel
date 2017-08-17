@@ -91,7 +91,8 @@ def copy_to_tempdir(condafile, wheel_dir):
 def fix_platform(wheel_dir):
     for wheel_file in glob(os.path.sep.join(
             [wheel_dir, '*'])):
-        new_wheel_file = wheel_file.replace('-any.', '-%s.' % (platform.machine()))
+        new_wheel_file = wheel_file.replace('-any.', '-%s_%s.' % (
+            platform.system().lower(), platform.machine()))
         new_wheel_file = new_wheel_file.replace('-py', '-cp')
         os.rename(wheel_file, new_wheel_file)
 
