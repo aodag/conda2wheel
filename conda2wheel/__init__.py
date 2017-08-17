@@ -11,10 +11,20 @@ from glob import glob
 from distlib.metadata import Metadata
 from distutils.archive_util import make_archive
 import platform
-import yaml
+
+from delocate import wheeltools
 
 
 logger = logging.getLogger(__name__)
+
+
+def add_dlls(_dll_files, wheel_dir, sub_path):
+    _dll_files = [os.path.abspath(fn) for fn in _dll_files]
+    for wheel_file in glob(os.path.join(
+            wheel_dir, '*.whl')):
+        with wheeltools.InWheel(wheel_file, wheel_file):
+            for _dll in _dll_files:
+                shutil.copy2(_dll, sub_path)
 
 
 def extract(condafile, workdir):
@@ -89,8 +99,8 @@ def copy_to_tempdir(condafile, wheel_dir):
 
 
 def fix_platform(wheel_dir):
-    for wheel_file in glob(os.path.sep.join(
-            [wheel_dir, '*'])):
+    for wheel_file in glob(os.path.join(
+            wheel_dir, '*.whl')):
         new_wheel_file = wheel_file.replace('-any.', '-%s_%s.' % (
             platform.system().lower(), platform.machine()))
         new_wheel_file = new_wheel_file.replace('-py', '-cp')
@@ -101,6 +111,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--wheel-dir', '-w', default=os.getcwd())
     parser.add_argument('--debug', action="store_true")
+    parser.add_argument('--dll-files', '-d', default=None)
+    parser.add_argument('--sub-path', '-s', default=None)
     parser.add_argument('condafile')
     args = parser.parse_args()
     condafiles = glob(args.condafile)
@@ -109,5 +121,7 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
 
     for condafile in condafiles:
-        wheel_file = copy_to_tempdir(condafile, args.wheel_dir)
+        copy_to_tempdir(condafile, args.wheel_dir)
     fix_platform(args.wheel_dir)
+    if args.dll_files is not None and args.sub_path is not None:
+        add_dlls(glob(args.dll_files), args.wheel_dir, args.sub_path)
