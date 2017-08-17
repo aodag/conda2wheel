@@ -10,7 +10,6 @@ from wheel.egg2wheel import egg2wheel, egg_info_re
 from glob import glob
 from distlib.metadata import Metadata
 from distutils.archive_util import make_archive
-import platform
 
 from delocate import wheeltools
 
@@ -98,14 +97,10 @@ def copy_to_tempdir(condafile, wheel_dir):
             copy_to_condadir(condadir, condafile, wheel_dir, tmp)
 
 
-def fix_platform(wheel_dir):
+def fix_cpver(wheel_dir):
     for wheel_file in glob(os.path.join(
             wheel_dir, '*.whl')):
-        _system = platform.system().lower()
-        _system = _system[:3] if _system == 'windows' else _system
-        new_wheel_file = wheel_file.replace('-any.', '-%s_%s.' % (
-            _system, platform.machine().lower()))
-        new_wheel_file = new_wheel_file.replace('-py', '-cp')
+        new_wheel_file = wheel_file.replace('-py', '-cp')
         os.rename(wheel_file, new_wheel_file)
 
 
@@ -124,6 +119,6 @@ def main():
 
     for condafile in condafiles:
         copy_to_tempdir(condafile, args.wheel_dir)
-    fix_platform(args.wheel_dir)
+    fix_cpver(args.wheel_dir)
     if args.dll_files is not None and args.sub_path is not None:
         add_dlls(glob(args.dll_files), args.wheel_dir, args.sub_path)
