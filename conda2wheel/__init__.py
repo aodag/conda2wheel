@@ -7,6 +7,7 @@ import tarfile
 import tempfile
 import logging
 from wheel.egg2wheel import egg2wheel, egg_info_re
+from glob import glob
 from distlib.metadata import Metadata
 
 logger = logging.getLogger(__name__)
@@ -89,8 +90,10 @@ def main():
     parser.add_argument('--debug', action="store_true")
     parser.add_argument('condafile')
     args = parser.parse_args()
+    condafiles = glob(args.condafile)
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    copy_to_tempdir(args.condafile, args.wheel_dir)
+    for condafile in condafiles:
+        copy_to_tempdir(args.condafile, args.wheel_dir)
