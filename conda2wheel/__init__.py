@@ -31,6 +31,7 @@ def iter_toplevel(egg):
             if line:
                 yield line
 
+
 def process_egg(egg):
     logger.debug(egg)
     pkginfo = os.path.join(egg, 'PKG-INFO')
@@ -40,6 +41,7 @@ def process_egg(egg):
         logger.debug(metadata.todict())
 
     return metadata
+
 
 def copy_toplevels(egg, egg_dir):
 
@@ -52,6 +54,35 @@ def copy_toplevels(egg, egg_dir):
             shutil.copytree(src, dest)
 
 
+def copy_to_condadir(condadir, condafile, wheel_dir, tmp_dir):
+    extract(condafile, condadir)
+
+    for egg in find_eggifo(condadir):
+        metadata = process_egg(egg)
+        egg_name = os.path.basename(egg)
+        egg_dir = os.path.join(tmp_dir, egg_name)
+        copy_toplevels(egg, egg_dir)
+        metadata.write(os.path.join(egg_dir, "EGG-INFO"), legacy=True)
+        egg_info = egg_info_re.match(os.path.basename(egg_dir)).groupdict()
+        egg2wheel(egg_dir, os.path.join(os.getcwd(), wheel_dir))
+
+
+def copy_to_tempdir(condafile, wheel_dir):
+    if not hasattr(tempfile, 'TemporaryDirectory'):
+        try:
+            tmp = tempfile.mkdtemp()
+            condadir = os.path.join(tmp, 'conda')
+            copy_to_condadir(condadir, condafile, wheel_dir, tmp)
+        except Exception:
+            raise
+        finally:
+            shutil.rmtree(tmp)
+    else:
+        with tempfile.TemporaryDirectory() as tmp:
+            condadir = os.path.join(tmp, 'conda')
+            copy_to_condadir(condadir, condafile, wheel_dir, tmp)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--wheel-dir', '-w', default=os.getcwd())
@@ -62,15 +93,4 @@ def main():
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
 
-    with tempfile.TemporaryDirectory() as tmp:
-        condadir = os.path.join(tmp, 'conda')
-        extract(args.condafile, condadir)
-
-        for egg in find_eggifo(condadir):
-            metadata = process_egg(egg)
-            egg_name = os.path.basename(egg)
-            egg_dir = os.path.join(tmp, egg_name)
-            copy_toplevels(egg, egg_dir)
-            metadata.write(os.path.join(egg_dir, "EGG-INFO"), legacy=True)
-            egg_info = egg_info_re.match(os.path.basename(egg_dir)).groupdict()
-            egg2wheel(egg_dir, os.path.join(os.getcwd(), args.wheel_dir))
+    copy_to_tempdir(args.condafile, args.wheel_dir)
