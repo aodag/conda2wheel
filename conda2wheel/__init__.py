@@ -9,6 +9,10 @@ import logging
 from wheel.egg2wheel import egg2wheel, egg_info_re
 from glob import glob
 from distlib.metadata import Metadata
+from distutils.archive_util import make_archive
+import platform
+import yaml
+
 
 logger = logging.getLogger(__name__)
 
@@ -63,8 +67,8 @@ def copy_to_condadir(condadir, condafile, wheel_dir, tmp_dir):
         egg_name = os.path.basename(egg)
         egg_dir = os.path.join(tmp_dir, egg_name)
         copy_toplevels(egg, egg_dir)
-        metadata.write(os.path.join(egg_dir, "EGG-INFO"), legacy=True)
-        egg_info = egg_info_re.match(os.path.basename(egg_dir)).groupdict()
+        egg_info = os.path.join(egg_dir, "EGG-INFO")
+        metadata.write(egg_info, legacy=True)
         egg2wheel(egg_dir, os.path.join(os.getcwd(), wheel_dir))
 
 
@@ -84,6 +88,14 @@ def copy_to_tempdir(condafile, wheel_dir):
             copy_to_condadir(condadir, condafile, wheel_dir, tmp)
 
 
+def fix_platform(wheel_dir):
+    for wheel_file in glob(os.path.sep.join(
+            [wheel_dir, '*'])):
+        new_wheel_file = wheel_file.replace('-any.', '-%s.' % (platform.machine()))
+        new_wheel_file = new_wheel_file.replace('-py', '-cp')
+        os.rename(wheel_file, new_wheel_file)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--wheel-dir', '-w', default=os.getcwd())
@@ -96,4 +108,5 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
 
     for condafile in condafiles:
-        copy_to_tempdir(condafile, args.wheel_dir)
+        wheel_file = copy_to_tempdir(condafile, args.wheel_dir)
+    fix_platform(args.wheel_dir)
