@@ -20,6 +20,7 @@ def _read(filename):
 requires = [
     "distlib",
     "wheel",
+    "delocate",
 ]
 
 points = {
