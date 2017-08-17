@@ -102,7 +102,7 @@ def fix_platform(wheel_dir):
     for wheel_file in glob(os.path.join(
             wheel_dir, '*.whl')):
         new_wheel_file = wheel_file.replace('-any.', '-%s_%s.' % (
-            platform.system().lower(), platform.machine()))
+            platform.system().lower(), platform.machine().lower()))
         new_wheel_file = new_wheel_file.replace('-py', '-cp')
         os.rename(wheel_file, new_wheel_file)
 
