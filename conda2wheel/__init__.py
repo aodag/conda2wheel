@@ -70,7 +70,6 @@ def copy_toplevels(egg, egg_dir):
 
 def copy_to_condadir(condadir, condafile, wheel_dir, tmp_dir):
     extract(condafile, condadir)
-
     for egg in find_eggifo(condadir):
         metadata = process_egg(egg)
         egg_name = os.path.basename(egg)
@@ -81,7 +80,7 @@ def copy_to_condadir(condadir, condafile, wheel_dir, tmp_dir):
         egg2wheel(egg_dir, os.path.join(os.getcwd(), wheel_dir))
 
 
-def copy_to_tempdir(condafile, wheel_dir):
+def copy_to_wheeldir(condafile, wheel_dir):
     if not hasattr(tempfile, 'TemporaryDirectory'):
         try:
             tmp = tempfile.mkdtemp()
@@ -118,7 +117,7 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
 
     for condafile in condafiles:
-        copy_to_tempdir(condafile, args.wheel_dir)
-    fix_cpver(args.wheel_dir)
-    if args.dll_files is not None and args.sub_path is not None:
-        add_dlls(glob(args.dll_files), args.wheel_dir, args.sub_path)
+        copy_to_wheeldir(condafile, args.wheel_dir)
+    # fix_cpver(args.wheel_dir)
+    # if args.dll_files is not None and args.sub_path is not None:
+    #     add_dlls(glob(args.dll_files), args.wheel_dir, args.sub_path)
