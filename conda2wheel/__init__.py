@@ -96,4 +96,4 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
 
     for condafile in condafiles:
-        copy_to_tempdir(args.condafile, args.wheel_dir)
+        copy_to_tempdir(condafile, args.wheel_dir)
